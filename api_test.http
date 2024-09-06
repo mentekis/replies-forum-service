@@ -1,0 +1,13 @@
+@baseURl = http://localhost:8004
+
+### Get List of Notification
+{{baseURl}}/
+
+### Create new notification
+POST {{baseURl}}/
+Content-Type: application/json
+
+{
+    "threadId" : "adfasdfassdgadf",
+    "body" : "fsdaf"
+}

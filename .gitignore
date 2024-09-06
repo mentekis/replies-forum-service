@@ -1,0 +1,7 @@
+.env*
+
+node_modules/
+dist/
+
+# Dont ignore the example
+!.env.example
