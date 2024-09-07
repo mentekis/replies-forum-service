@@ -6,4 +6,4 @@ export const repliesRouter = Router();
 
 repliesRouter.get("/:threadId", controller.list);
 repliesRouter.post("/", jwtMiddleware, controller.create);
-repliesRouter.patch("/:id");
+repliesRouter.patch("/:id", jwtMiddleware, controller.update);

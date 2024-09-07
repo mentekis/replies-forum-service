@@ -2,9 +2,11 @@ import amqplib from 'amqplib'
 import { env } from './env'
 
 type TQueueList =
-    "newThread" |
+    "newReply" |
     "enrichUserThreadData" |
     "updateUserData";
+
+let connection: amqplib.Connection | null = null;
 
 export async function newConnection() {
     try {
@@ -20,7 +22,7 @@ export async function newConnection() {
     }
 }
 
-export async function listenTo(connection: amqplib.Connection | null, queue: TQueueList, duty: (msg: amqplib.Message) => void) {
+export async function listenTo(queue: TQueueList, duty: (msg: amqplib.Message) => void) {
     try {
         // Create new channel fro connection
         // Create new connection if caller use null connection
@@ -47,15 +49,15 @@ export async function listenTo(connection: amqplib.Connection | null, queue: TQu
     }
 }
 
-export async function emitEventTo(conn: amqplib.Connection | null, queue: TQueueList, data: string) {
+export async function emitEventTo(queue: TQueueList, data: string) {
     try {
         // Create connection if no connection provided
-        if (conn == null) {
-            conn = await newConnection();
+        if (connection == null) {
+            connection = await newConnection();
         }
 
         // Create sender channel
-        const sendChan = await conn.createChannel();
+        const sendChan = await connection.createChannel();
 
         sendChan.sendToQueue(queue, Buffer.from(JSON.stringify(data)));
     } catch (error) {

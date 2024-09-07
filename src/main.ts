@@ -20,7 +20,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-// app.use(originChecker);
+app.use(originChecker);
 
 newRouter(app);
 

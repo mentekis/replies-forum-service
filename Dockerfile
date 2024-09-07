@@ -8,6 +8,6 @@ RUN npm i -g pnpm@latest typescript
 RUN pnpm i -p
 RUN pnpm build
 
-EXPOSE 8003
+EXPOSE 8004
 
 ENTRYPOINT [ "pnpm", "start" ]

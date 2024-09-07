@@ -59,6 +59,8 @@ const controller = {
                 body,
                 userId: user._id
             }, id, user);
+
+            return responseGenerator.generatedResponse(res, { data: result });
         } catch (error) {
             const issue = (error as Error).message;
 

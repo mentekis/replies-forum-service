@@ -3,12 +3,13 @@ import { RepliesRepo } from "../repositories";
 import { IUser } from "../dto/user.dto";
 import { userService } from "./user.service";
 import { z } from "zod";
+import { rabbitmq } from "../utils";
 
 // Thread validation
 const repliesValidationSchema = z.object({
     threadId: z.string({ message: "Thread ID must exists" }),
     userId: z.string({ message: "User ID not found" }),
-    body: z.string().min(8, { message: "Minimum thread is 8 character" }),
+    body: z.string({ message: "Reply body is required" }).min(2, { message: "Minimum thread is 8 character" }),
 })
 
 export const service = {
@@ -43,7 +44,19 @@ export const service = {
             body: requestData.body,
         }
 
-        return await RepliesRepo.create(data);
+        // Store to database
+        const result = await RepliesRepo.create(data);
+
+        // Emit event new reply created, send notification to thrad owner
+        const emittedData = JSON.stringify({
+            threadId: requestData.threadId,
+            userId: user._id,
+            timestamp: Math.floor(Date.now() / 1000),
+        });
+
+        rabbitmq.emitEventTo("newReply", emittedData);
+
+        return result;
     },
 
     update: async (requestData: IRepliesRequest, id: string, user: IUser) => {
