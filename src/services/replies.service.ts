@@ -48,13 +48,13 @@ export const service = {
         const result = await RepliesRepo.create(data);
 
         // Emit event new reply created, send notification to thrad owner
-        const emittedData = JSON.stringify({
+        const emittedData = {
             threadId: requestData.threadId,
             userId: user._id,
             timestamp: Math.floor(Date.now() / 1000),
-        });
+        };
 
-        rabbitmq.emitEventTo("newReply", emittedData);
+        await rabbitmq.emitEventTo("newReply", emittedData);
 
         return result;
     },

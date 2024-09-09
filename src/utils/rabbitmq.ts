@@ -22,7 +22,7 @@ export async function newConnection() {
     }
 }
 
-export async function listenTo(queue: TQueueList, duty: (msg: amqplib.Message) => void) {
+export async function listenTo(queue: TQueueList, duty: (msg: amqplib.Message) => void | Promise<any>) {
     try {
         // Create new channel fro connection
         // Create new connection if caller use null connection
@@ -33,11 +33,23 @@ export async function listenTo(queue: TQueueList, duty: (msg: amqplib.Message) =
         const chan = await connection.createChannel();
         chan.assertQueue(queue)
 
-        chan.consume(queue, (msg) => {
+        chan.consume(queue, async (msg) => {
             if (msg !== null) {
                 console.log(`message received : `, msg.content.toString())
 
-                duty(msg);
+                // Perform the duty by generalize all function are async
+                // Use try catch block to catch any error happen
+                try {
+                    const result = duty(msg);
+
+                    // Check if result is returning Promise
+                    // If it is a promise, then we await the actual result
+                    if (result instanceof Promise) {
+                        await result;
+                    }
+                } catch (error) {
+                    console.log(`Error in performing duty : ${error}`)
+                }
 
                 chan.ack(msg);
             } else {
@@ -49,7 +61,7 @@ export async function listenTo(queue: TQueueList, duty: (msg: amqplib.Message) =
     }
 }
 
-export async function emitEventTo(queue: TQueueList, data: string) {
+export async function emitEventTo(queue: TQueueList, data: string | object) {
     try {
         // Create connection if no connection provided
         if (connection == null) {
