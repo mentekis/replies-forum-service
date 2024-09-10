@@ -1,0 +1,57 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say hello to world
+        run: |
+          echo "Hello world"
+
+      - name: Checkout to branch
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t devscale-replies-service .
+
+  push-to-registry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.BOMSIWOR_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.BOMSIWOR_DOCKERHUB_TOKEN }}
+
+      # - name: Extract metadata (tags, labels) for Docker
+      #   id: meta
+      #   uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      #   with:
+      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: bomsiwor/devscale-forum-replies-service
+          # tags: ${{ steps.meta.outputs.tags }}
+          # labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-on-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connecting to remote server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.BOMSIWOR_VPS_HOST }}
+          username: ${{ secrets.BOMSIWOR_VPS_USERNAME }}
+          key: ${{ secrets.BOMSIWOR_VPS_KEY }}
+          script: |
+            docker pull bomsiwor/devscale-forum-replies-service
